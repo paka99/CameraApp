@@ -5,8 +5,12 @@ import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.content.res.Configuration;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.Window;
+import android.view.WindowManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,12 +21,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        mSurface = (MyCameraSurface) findViewById(R.id.preview);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+
+        setContentView(R.layout.activity_main);
+        mSurface = (MyCameraSurface)findViewById(R.id.preview);
     }
 }
 
+// 미리보기 표면 클래스
 class MyCameraSurface extends SurfaceView implements SurfaceHolder.Callback {
     SurfaceHolder mHolder;
     Camera mCamera;
@@ -36,6 +47,7 @@ class MyCameraSurface extends SurfaceView implements SurfaceHolder.Callback {
     // 표면 생성시 카메라 오픈하고 미리보기 설정
     public void surfaceCreated(SurfaceHolder holder) {
         mCamera = Camera.open();
+        mCamera.setDisplayOrientation(90);
         try {
             mCamera.setPreviewDisplay(mHolder);
         } catch (IOException e) {

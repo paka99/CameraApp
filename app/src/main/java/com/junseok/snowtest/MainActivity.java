@@ -1,12 +1,15 @@
 package com.junseok.snowtest;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -24,6 +27,10 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
+    private static ContentResolver mCr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,20 +61,23 @@ public class MainActivity extends AppCompatActivity {
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-        // TODO: 오른쪽으로 스와이프 하면 사진 리스트를 띄우고 싶은데 0번 Fragment가 화면에 출력되지 않아 조사해봐야함.
-        //mViewPager.setCurrentItem(0);
+        //mViewPager.setCurrentItem(pos);
+
+        mCr = getContentResolver();
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        final int pos = 1;
-        mViewPager.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mViewPager.setCurrentItem(pos);
-            }
-        }, 100);
+    public void onStart() {
+        super.onStart();
+//        final int pos = 1;
+//        // TODO: 작동 방식 알아보기. && 앱 onStop에 간 뒤 제대로 작동 x
+          // TODO: 아마도 Listing 화면이랑 Preview 화면이랑 서로 다른 Thread로 돌려야할듯.
+//        mViewPager.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                mViewPager.setCurrentItem(pos);
+//            }
+//        }, 100);
     }
 
 
@@ -88,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.frag_preview, container, false);
+            Log.d("CREATE", "Preview is created");
             //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
             //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
             mSurface = (MyCameraSurface)rootView.findViewById(R.id.preview);
@@ -140,13 +152,13 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
-
-
     public static class PictureList extends Fragment {
         /**
          * The fragment argument representing the section number for this
          * fragment.
          */
+        private GridView mGrid;
+        private Cursor mCursor;
 
         public PictureList() {
         }
@@ -167,11 +179,71 @@ public class MainActivity extends AppCompatActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.list_picture, container, false);
-            //TextView textView = (TextView) rootView.findViewById(R.id.picture_list);
-            //textView.setText("Hello");
-            //mSurface = (MyCameraSurface)rootView.findViewById(R.id.picture_list);
+            Log.d("CREATE", "PictureList is created");
+
+            mGrid = (GridView) rootView.findViewById(R.id.list_picture);
+            mCursor = mCr.query(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
+                    null, null, null, null);
+            ImageAdapter Adapter = new ImageAdapter(getActivity());
+            mGrid.setAdapter(Adapter);
+
+            mGrid.setOnItemClickListener(mItemClickListener);
+
 
             return rootView;
+        }
+
+        AdapterView.OnItemClickListener mItemClickListener =
+                new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View view,
+                                            int position, long id) {
+                        mCursor.moveToPosition(position);
+                        String path = mCursor.getString(mCursor.getColumnIndex(
+                                MediaStore.Images.ImageColumns.DATA));
+                        Intent intent = new Intent(getActivity(),
+                                ImageFull.class);
+                        intent.putExtra("path", path);
+                        startActivity(intent);
+                    }
+                };
+
+        class ImageAdapter extends BaseAdapter {
+            private Context mContext;
+
+            public ImageAdapter(Context c) {
+                mContext = c;
+            }
+
+            public int getCount() {
+                return mCursor.getCount();
+            }
+
+            public Object getItem(int position) {
+                return position;
+            }
+
+            public long getItemId(int position) {
+                return position;
+            }
+
+            public View getView(int position, View convertView, ViewGroup parent) {
+                ImageView imageView;
+                if (convertView == null) {
+                    imageView = new ImageView(mContext);
+                } else {
+                    imageView = (ImageView) convertView;
+                }
+                mCursor.moveToPosition(position);
+                Uri uri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.
+                                EXTERNAL_CONTENT_URI,
+                        mCursor.getString(mCursor.getColumnIndex(MediaStore.
+                                Images.Thumbnails._ID)));
+                imageView.setImageURI(uri);
+                imageView.setAdjustViewBounds(true);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+                return imageView;
+            }
         }
     }
 

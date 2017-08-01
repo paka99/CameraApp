@@ -4,11 +4,13 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 
 import android.os.Environment;
+import android.provider.BaseColumns;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -159,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
          */
         private GridView mGrid;
         private Cursor mCursor;
+        private Cursor mThumbCursor;
 
         public PictureList() {
         }
@@ -182,8 +185,9 @@ public class MainActivity extends AppCompatActivity {
             Log.d("CREATE", "PictureList is created");
 
             mGrid = (GridView) rootView.findViewById(R.id.list_picture);
-            mCursor = mCr.query(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI,
-                    null, null, null, null);
+            mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, null);
+
             ImageAdapter Adapter = new ImageAdapter(getActivity());
             mGrid.setAdapter(Adapter);
 
@@ -234,11 +238,11 @@ public class MainActivity extends AppCompatActivity {
                     imageView = (ImageView) convertView;
                 }
                 mCursor.moveToPosition(position);
-                Uri uri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.
-                                EXTERNAL_CONTENT_URI,
-                        mCursor.getString(mCursor.getColumnIndex(MediaStore.
-                                Images.Thumbnails._ID)));
-                imageView.setImageURI(uri);
+
+
+               // Uri uri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media._ID)));
+                imageView.setImageBitmap(MediaStore.Images.Thumbnails.getThumbnail(mCr, mCursor.getInt(mCursor.getColumnIndex(MediaStore.MediaColumns._ID)), MediaStore.Images.Thumbnails.MICRO_KIND, null));
+                //imageView.setImageURI(uri);
                 imageView.setAdjustViewBounds(true);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 

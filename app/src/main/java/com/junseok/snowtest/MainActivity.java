@@ -24,6 +24,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -53,7 +54,19 @@ public class MainActivity extends AppCompatActivity {
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
         // TODO: 오른쪽으로 스와이프 하면 사진 리스트를 띄우고 싶은데 0번 Fragment가 화면에 출력되지 않아 조사해봐야함.
-        mViewPager.setCurrentItem(1);
+        //mViewPager.setCurrentItem(0);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        final int pos = 1;
+        mViewPager.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mViewPager.setCurrentItem(pos);
+            }
+        }, 100);
     }
 
 
@@ -174,12 +187,13 @@ public class MainActivity extends AppCompatActivity {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
             if(position == 1){
+                Log.d("PREVIEW", "This Position is PreviewList");
                 return PreviewFrag.newInstance();
             }
             else {
+                Log.d("PICTURELIST", "This Position is PictureList");
                 return PictureList.newInstance();
             }
-            //Log.e("aaa", "ThisPositionis");
         }
 
         @Override

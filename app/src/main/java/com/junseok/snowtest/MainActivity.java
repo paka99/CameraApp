@@ -5,21 +5,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import android.os.Environment;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.util.Log;
 
+import java.io.OutputStream;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -32,6 +37,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,7 +48,7 @@ import java.io.IOException;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends FragmentActivity {
     //MyCameraSurface mSurface;
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
@@ -64,7 +70,14 @@ public class MainActivity extends AppCompatActivity {
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
         //mViewPager.setCurrentItem(pos);
+        mViewPager.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mViewPager.setCurrentItem(0);
+            }
+        }, 1000);
 
+        mViewPager.setOffscreenPageLimit(2);
         mCr = getContentResolver();
     }
 
@@ -86,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     public static class PreviewFrag extends Fragment {
         private MyCameraSurface mSurface;
 
+
         public PreviewFrag() {
         }
 
@@ -104,13 +118,13 @@ public class MainActivity extends AppCompatActivity {
             Log.d("CREATE", "Preview is created");
             //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
             //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
-            mSurface = (MyCameraSurface)rootView.findViewById(R.id.preview);
-
-            mSurface.setOnClickListener(new MyCameraSurface.OnClickListener() {
-                public void onClick(View v) {
-                    mSurface.mCamera.takePicture(null, null, mPicture);
-                }
-            });
+//            mSurface = (MyCameraSurface)rootView.findViewById(R.id.preview);
+//
+//            mSurface.setOnClickListener(new MyCameraSurface.OnClickListener() {
+//                public void onClick(View v) {
+//                    mSurface.mCamera.takePicture(null, null, mPicture);
+//                }
+//            });
 
             return rootView;
         }
@@ -252,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
+    public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
@@ -262,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            if(position == 1){
+            if(position == 0){
                 Log.d("PREVIEW", "This Position is PreviewList");
                 return PreviewFrag.newInstance();
             }

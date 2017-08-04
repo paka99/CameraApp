@@ -5,19 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 
 import android.os.Environment;
-import android.provider.BaseColumns;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -49,7 +45,6 @@ import java.util.List;
 
 
 public class MainActivity extends FragmentActivity {
-    //MyCameraSurface mSurface;
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
@@ -69,30 +64,21 @@ public class MainActivity extends FragmentActivity {
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-        //mViewPager.setCurrentItem(pos);
-        mViewPager.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mViewPager.setCurrentItem(0);
-            }
-        }, 1000);
 
-        mViewPager.setOffscreenPageLimit(2);
+//        mViewPager.postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                mViewPager.setCurrentItem(0);
+//            }
+//        }, 1000);
+
         mCr = getContentResolver();
+        //mViewPager.setOffscreenPageLimit(2);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-//        final int pos = 1;
-//        // TODO: 작동 방식 알아보기. && 앱 onStop에 간 뒤 제대로 작동 x
-          // TODO: 아마도 Listing 화면이랑 Preview 화면이랑 서로 다른 Thread로 돌려야할듯.
-//        mViewPager.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                mViewPager.setCurrentItem(pos);
-//            }
-//        }, 100);
     }
 
 
@@ -118,13 +104,13 @@ public class MainActivity extends FragmentActivity {
             Log.d("CREATE", "Preview is created");
             //TextView textView = (TextView) rootView.findViewById(R.id.section_label);
             //textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
-//            mSurface = (MyCameraSurface)rootView.findViewById(R.id.preview);
-//
-//            mSurface.setOnClickListener(new MyCameraSurface.OnClickListener() {
-//                public void onClick(View v) {
-//                    mSurface.mCamera.takePicture(null, null, mPicture);
-//                }
-//            });
+            mSurface = (MyCameraSurface)rootView.findViewById(R.id.preview);
+
+            mSurface.setOnClickListener(new MyCameraSurface.OnClickListener() {
+                public void onClick(View v) {
+                    mSurface.mCamera.takePicture(null, null, mPicture);
+                }
+            });
 
             return rootView;
         }
@@ -175,7 +161,6 @@ public class MainActivity extends FragmentActivity {
          */
         private GridView mGrid;
         private Cursor mCursor;
-        private Cursor mThumbCursor;
 
         public PictureList() {
         }
@@ -206,7 +191,6 @@ public class MainActivity extends FragmentActivity {
             mGrid.setAdapter(Adapter);
 
             mGrid.setOnItemClickListener(mItemClickListener);
-
 
             return rootView;
         }
@@ -253,10 +237,8 @@ public class MainActivity extends FragmentActivity {
                 }
                 mCursor.moveToPosition(position);
 
-
-               // Uri uri = Uri.withAppendedPath(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, mCursor.getString(mCursor.getColumnIndex(MediaStore.Images.Media._ID)));
-                imageView.setImageBitmap(MediaStore.Images.Thumbnails.getThumbnail(mCr, mCursor.getInt(mCursor.getColumnIndex(MediaStore.MediaColumns._ID)), MediaStore.Images.Thumbnails.MICRO_KIND, null));
-                //imageView.setImageURI(uri);
+                Bitmap thumbnailImage = MediaStore.Images.Thumbnails.getThumbnail(mCr, mCursor.getInt(mCursor.getColumnIndex(MediaStore.MediaColumns._ID)), MediaStore.Images.Thumbnails.MINI_KIND, null);
+                imageView.setImageBitmap(thumbnailImage);
                 imageView.setAdjustViewBounds(true);
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
 

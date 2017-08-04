@@ -8,9 +8,9 @@
         android:id="@+id/list_picture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:verticalSpacing="10dip"
-        android:horizontalSpacing="10dip"
-        android:numColumns="2"
+        android:verticalSpacing="3dip"
+        android:horizontalSpacing="3dip"
+        android:numColumns="5"
         android:stretchMode="columnWidth"
         />
 </LinearLayout>

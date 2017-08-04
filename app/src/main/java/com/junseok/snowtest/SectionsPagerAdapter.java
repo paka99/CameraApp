@@ -116,7 +116,6 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
                     mSurface.mCamera.takePicture(null, null, mPicture);
                     // TODO: List Picture Fragment Notify Change
                     //mCallback.onArticleSelected(1);
-                    mAdapter.notifyDataSetChanged();
                 }
             });
 
@@ -171,21 +170,22 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
                 intent.setData(uri);
                 getActivity().sendBroadcast(intent);
 
-//                MediaScannerConnection.scanFile(getActivity(),
-//                        new String[] { sd }, null,
-//                        new MediaScannerConnection.OnScanCompletedListener() {
-//                            public void onScanCompleted(String path, Uri uri) {
-//                                Log.i("TAG", "Finished scanning " + path);
-//                            }
-//                        });
+                MediaScannerConnection.scanFile(getActivity(),
+                        new String[] { sd }, null,
+                        new MediaScannerConnection.OnScanCompletedListener() {
+                            public void onScanCompleted(String path, Uri uri) {
+                                Log.i("TAG", "Finished scanning " + path);
+                                mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                        null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, null);
+                                Log.d("THUMB", "mCursorCnt is " + mCursor.getCount());
+                                mAdapter.updateCursor(mCursor);
+
+                                mAdapter.notifyDataSetChanged();
+                            }
+                        });
 
                 Toast.makeText(getActivity(), "사진 저장 완료 : " + path,
                         Toast.LENGTH_SHORT).show();
-
-                mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, null);
-
-                Log.d("THUMB", "mCursorCnt is " + mCursor.getCount());
 
 //                Bitmap source = BitmapFactory.decodeFile(path);
 //                ThumbnailUtils.extractThumbnail(source, 80, 80);
@@ -266,6 +266,10 @@ class ImageAdapter extends BaseAdapter {
         this.mCursor = mCursor;
     }
 
+    public void updateCursor(Cursor mCursor){
+        this.mCursor = mCursor;
+    }
+
     public int getCount() {
         return mCursor.getCount();
     }
@@ -312,8 +316,6 @@ class ImageAdapter extends BaseAdapter {
 
     @Override
     public void notifyDataSetChanged(){ // 위에서 연결된 DataSetObserver를 통한 변경 확인
-//        mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//                null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, null);
         Log.d("NOTIFY", "mCursor Count is " + mCursor.getCount());
         mDataSetObservable.notifyChanged();
     }

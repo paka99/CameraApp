@@ -63,6 +63,7 @@ public class MyCameraSurface extends SurfaceView implements SurfaceHolder.Callba
             }
             params.setPreviewSize(opti.width, opti.height);
         }
+        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         mCamera.setParameters(params);
         mCamera.startPreview();
     }

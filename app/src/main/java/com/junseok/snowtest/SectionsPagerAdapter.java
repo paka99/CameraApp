@@ -36,7 +36,6 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
     private static ContentResolver mCr;
     private static Cursor mCursor;
     private static GridView mGrid;
-    static int mNumPicture;
 
     public SectionsPagerAdapter(FragmentManager fm) {
         super(fm);
@@ -132,17 +131,6 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
                 Toast.makeText(getActivity(), "사진 저장 완료 : " + path,
                         Toast.LENGTH_SHORT).show();
 
-//                while(mNumPicture == mCursor.getCount()){
-//                    mCursor.close();
-//                    mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//                            null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, MediaStore.Images.Media.DATE_ADDED + " desc");
-//                    Log.d("CALLBACK", "mCursorCnt is " + mCursor.getCount());
-//                }
-//
-//                mNumPicture = mCursor.getCount();
-//                mAdapter.updateCursor(mCursor);
-//                mAdapter.notifyDataSetChanged();
-
                 mSurface.mCamera.startPreview();
             }
         };
@@ -179,21 +167,17 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.list_picture, container, false);
-            //rootView.setLayoutParams(new GridView.LayoutParams(GridView.AUTO_FIT, 5));
             Log.d("CREATE", "PictureList is created");
-
-            mGrid = (GridView) rootView.findViewById(R.id.list_picture);
+            mGrid = (GridView) rootView.findViewById(R.id.picture);
             mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, MediaStore.Images.Media.DATE_ADDED + " desc");
 //            mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
 //                    null, null, null, null);
 
-            mNumPicture = mCursor.getCount();
             mAdapter = new ImageAdapter(getActivity(), mCr, mCursor);
             mGrid.setAdapter(mAdapter);
             mGrid.setOnItemClickListener(mItemClickListener);
             mCr.registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, contentObserver );
-
 
             return rootView;
         }

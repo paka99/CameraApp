@@ -7,13 +7,10 @@ import android.database.DataSetObservable;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-
-import java.util.ArrayList;
 
 /**
  * Created by PEM_ljs on 2017-08-05.
@@ -24,13 +21,6 @@ public class ImageAdapter extends BaseAdapter {
     DataSetObservable mDataSetObservable = new DataSetObservable();
     private ContentResolver mCr;
     private Cursor mCursor;
-
-    ArrayList<Bitmap> mThumbnaiList;
-
-    public void addThumbnailImage(Bitmap image){
-        if(image == null)   return;
-        mThumbnaiList.add(image);
-    }
 
     public ImageAdapter(Context c, ContentResolver mCr, Cursor mCursor) {
         mContext = c;
@@ -64,15 +54,10 @@ public class ImageAdapter extends BaseAdapter {
         mCursor.moveToPosition(position);
         Bitmap thumbnailImage = MediaStore.Images.Thumbnails.getThumbnail(mCr, mCursor.getInt(mCursor.getColumnIndex(MediaStore.MediaColumns._ID)), MediaStore.Images.Thumbnails.MINI_KIND, null);
         imageView.setImageBitmap(thumbnailImage);
-//        imageView.setImageBitmap(mThumbnaiList.get(position));
 
         // TODO: 크기를 고정시키면 앱종료
         imageView.setAdjustViewBounds(true);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
-        if(position == getCount() -1){
-            Log.i("LIST", "Listing Complete");
-        }
 
         return imageView;
     }
@@ -89,7 +74,6 @@ public class ImageAdapter extends BaseAdapter {
 
     @Override
     public void notifyDataSetChanged(){
-        //Log.d("NOTIFY", "mCursor Count is " + mCursor.getCount());
         mDataSetObservable.notifyChanged();
     }
 }

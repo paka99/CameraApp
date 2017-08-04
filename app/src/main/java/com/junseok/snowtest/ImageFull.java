@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -30,5 +31,12 @@ public class ImageFull extends AppCompatActivity {
             Toast.makeText(ImageFull.this,"이미지가 너무 큽니다.",
                     Toast.LENGTH_SHORT).show();
         }
+
+        imageView.setOnClickListener(new ImageView.OnClickListener() {
+            @Override
+            public void onClick(View v){
+                finish();
+            }
+        });
     }
 }

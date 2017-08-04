@@ -7,7 +7,7 @@ import android.support.v4.view.ViewPager;
 import android.view.WindowManager;
 
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends FragmentActivity implements SectionsPagerAdapter.OnHeadlineSelectedListener{
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
@@ -24,9 +24,10 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
 
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mSectionsPagerAdapter.setContentResolver(getContentResolver());
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
-        mSectionsPagerAdapter.setContentResolver(getContentResolver());
+
 
 //        mViewPager.postDelayed(new Runnable() {
 //            @Override
@@ -45,12 +46,13 @@ public class MainActivity extends FragmentActivity {
     }
 
 
-
+    @Override
     public void onArticleSelected(int position) {
         // The user selected the headline of an article from the HeadlinesFragment
         // Do something here to display that article
     }
 }
+
 
 
 

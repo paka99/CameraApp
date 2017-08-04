@@ -8,7 +8,10 @@ import android.database.Cursor;
 import android.database.DataSetObservable;
 import android.database.DataSetObserver;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
+import android.media.MediaScannerConnection;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -37,6 +40,9 @@ import java.util.Date;
 
 public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
     private static ContentResolver mCr;
+    static ImageAdapter mAdapter;
+    private static GridView mGrid;
+    private static Cursor mCursor;
 
     // Container Activity must implement this interface
     public interface OnHeadlineSelectedListener {
@@ -83,6 +89,8 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
     public static class PreviewFrag extends Fragment {
         private MyCameraSurface mSurface;
 
+        OnHeadlineSelectedListener mCallback;
+
         public PreviewFrag() {
         }
 
@@ -108,7 +116,7 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
                     mSurface.mCamera.takePicture(null, null, mPicture);
                     // TODO: List Picture Fragment Notify Change
                     //mCallback.onArticleSelected(1);
-
+                    mAdapter.notifyDataSetChanged();
                 }
             });
 
@@ -118,6 +126,15 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
         @Override
         public void onAttach(Activity activity){
             super.onAttach(activity);
+
+            // This makes sure that the container activity has implemented
+            // the callback interface. If not, it throws an exception
+            try {
+                mCallback = (OnHeadlineSelectedListener) activity;
+            } catch (ClassCastException e) {
+                throw new ClassCastException(activity.toString()
+                        + " must implement OnHeadlineSelectedListener");
+            }
 
 
         }
@@ -154,8 +171,25 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
                 intent.setData(uri);
                 getActivity().sendBroadcast(intent);
 
+//                MediaScannerConnection.scanFile(getActivity(),
+//                        new String[] { sd }, null,
+//                        new MediaScannerConnection.OnScanCompletedListener() {
+//                            public void onScanCompleted(String path, Uri uri) {
+//                                Log.i("TAG", "Finished scanning " + path);
+//                            }
+//                        });
+
                 Toast.makeText(getActivity(), "사진 저장 완료 : " + path,
                         Toast.LENGTH_SHORT).show();
+
+                mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, null);
+
+                Log.d("THUMB", "mCursorCnt is " + mCursor.getCount());
+
+//                Bitmap source = BitmapFactory.decodeFile(path);
+//                ThumbnailUtils.extractThumbnail(source, 80, 80);
+
                 mSurface.mCamera.startPreview();
             }
         };
@@ -166,8 +200,6 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
          * The fragment argument representing the section number for this
          * fragment.
          */
-        private GridView mGrid;
-        private Cursor mCursor;
 
         public PictureList() {
         }
@@ -194,9 +226,8 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
             mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, null);
 
-            ImageAdapter Adapter = new ImageAdapter(getActivity());
-            mGrid.setAdapter(Adapter);
-
+            mAdapter = new ImageAdapter(getActivity(), mCr, mCursor);
+            mGrid.setAdapter(mAdapter);
             mGrid.setOnItemClickListener(mItemClickListener);
 
             return rootView;
@@ -215,64 +246,76 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
                         startActivity(intent);
                     }
                 };
-
-        class ImageAdapter extends BaseAdapter {
-            private Context mContext;
-            DataSetObservable mDataSetObservable = new DataSetObservable();
-
-
-            public ImageAdapter(Context c) {
-                mContext = c;
-            }
-
-            public int getCount() {
-                return mCursor.getCount();
-            }
-
-            public Object getItem(int position) {
-                return position;
-            }
-
-            public long getItemId(int position) {
-                return position;
-            }
-
-            public View getView(int position, View convertView, ViewGroup parent) {
-                ImageView imageView;
-                if (convertView == null) {
-                    imageView = new ImageView(mContext);
-                } else {
-                    imageView = (ImageView) convertView;
-                }
-                mCursor.moveToPosition(position);
-
-                Bitmap thumbnailImage = MediaStore.Images.Thumbnails.getThumbnail(mCr, mCursor.getInt(mCursor.getColumnIndex(MediaStore.MediaColumns._ID)), MediaStore.Images.Thumbnails.MINI_KIND, null);
-
-                // TODO: 크기를 고정시키면 앱종료
-                //thumbnailImage.setHeight(10);
-                //thumbnailImage.setWidth(10);
-                imageView.setImageBitmap(thumbnailImage);
-                imageView.setAdjustViewBounds(true);
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-
-                return imageView;
-            }
-
-            @Override
-            public void registerDataSetObserver(DataSetObserver observer){
-                mDataSetObservable.registerObserver(observer);
-            }
-
-            @Override
-            public void unregisterDataSetObserver(DataSetObserver observer){ // DataSetObserver의 해제
-                mDataSetObservable.unregisterObserver(observer);
-            }
-
-            @Override
-            public void notifyDataSetChanged(){ // 위에서 연결된 DataSetObserver를 통한 변경 확인
-                mDataSetObservable.notifyChanged();
-            }
-
-        }
     }
+}
+
+class ImageAdapter extends BaseAdapter {
+    private Context mContext;
+    DataSetObservable mDataSetObservable = new DataSetObservable();
+    private static ContentResolver mCr;
+    private Cursor mCursor;
+
+
+    public ImageAdapter(Context c) {
+        mContext = c;
+    }
+
+    public ImageAdapter(Context c, ContentResolver mCr, Cursor mCursor) {
+        mContext = c;
+        this.mCr = mCr;
+        this.mCursor = mCursor;
+    }
+
+    public int getCount() {
+        return mCursor.getCount();
+    }
+
+    public Object getItem(int position) {
+        return position;
+    }
+
+    public long getItemId(int position) {
+        return position;
+    }
+
+    public View getView(int position, View convertView, ViewGroup parent) {
+        ImageView imageView;
+        if (convertView == null) {
+            imageView = new ImageView(mContext);
+        } else {
+            imageView = (ImageView) convertView;
+        }
+        mCursor.moveToPosition(position);
+
+        Bitmap thumbnailImage = MediaStore.Images.Thumbnails.getThumbnail(mCr, mCursor.getInt(mCursor.getColumnIndex(MediaStore.MediaColumns._ID)), MediaStore.Images.Thumbnails.MINI_KIND, null);
+
+        // TODO: 크기를 고정시키면 앱종료
+        //thumbnailImage.setHeight(10);
+        //thumbnailImage.setWidth(10);
+        imageView.setImageBitmap(thumbnailImage);
+        imageView.setAdjustViewBounds(true);
+        //imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+
+        return imageView;
+    }
+
+    @Override
+    public void registerDataSetObserver(DataSetObserver observer){
+        mDataSetObservable.registerObserver(observer);
+    }
+
+    @Override
+    public void unregisterDataSetObserver(DataSetObserver observer){ // DataSetObserver의 해제
+        mDataSetObservable.unregisterObserver(observer);
+    }
+
+    @Override
+    public void notifyDataSetChanged(){ // 위에서 연결된 DataSetObserver를 통한 변경 확인
+//        mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, null);
+        Log.d("NOTIFY", "mCursor Count is " + mCursor.getCount());
+        mDataSetObservable.notifyChanged();
+    }
+
 }

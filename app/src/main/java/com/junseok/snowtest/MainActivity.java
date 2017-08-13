@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.WindowManager;
 
 
@@ -12,9 +13,13 @@ public class MainActivity extends FragmentActivity {
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
 
+    private final String TAG = "MAINACT";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.v(TAG, "Call onCreate");
 
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -25,7 +30,7 @@ public class MainActivity extends FragmentActivity {
 
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
         mSectionsPagerAdapter.setContentResolver(getContentResolver());
-        mViewPager = (ViewPager) findViewById(R.id.container);
+        mViewPager = (ViewPager)findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
     }
 

@@ -64,16 +64,19 @@ public class ImageAdapter extends BaseAdapter {
 
     @Override
     public void registerDataSetObserver(DataSetObserver observer){
+        super.registerDataSetObserver(observer);
         mDataSetObservable.registerObserver(observer);
     }
 
     @Override
     public void unregisterDataSetObserver(DataSetObserver observer){
+        super.unregisterDataSetObserver(observer);
         mDataSetObservable.unregisterObserver(observer);
     }
 
     @Override
     public void notifyDataSetChanged(){
+        super.notifyDataSetChanged();
         mDataSetObservable.notifyChanged();
     }
 }

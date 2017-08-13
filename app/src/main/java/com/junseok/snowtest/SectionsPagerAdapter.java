@@ -44,11 +44,9 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
     @Override
     public Fragment getItem(int position) {
         if(position == 0){
-            Log.d("PREVIEW", "This Position is PreviewList");
             return PreviewFrag.newInstance();
         }
         else {
-            Log.d("PICTURELIST", "This Position is PictureList");
             return PictureList.newInstance();
         }
     }
@@ -69,10 +67,11 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
     *******************************************/
     public static class PreviewFrag extends Fragment {
         private MyCameraSurface mSurface;
-        boolean mFocus;
+        private final String TAG = "PREVIEW";
+
 
         public PreviewFrag() {
-            mFocus = true;
+            super();
         }
 
         public static PreviewFrag newInstance() {
@@ -83,8 +82,8 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
+            Log.v(TAG, "Call onCreateView");
             View rootView = inflater.inflate(R.layout.frag_preview, container, false);
-            Log.d("CREATE", "Preview is created");
             mSurface = (MyCameraSurface)rootView.findViewById(R.id.preview);
 
             mSurface.setOnClickListener(new MyCameraSurface.OnClickListener() {
@@ -98,7 +97,6 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
         Camera.PictureCallback mPicture = new Camera.PictureCallback() {
             public void onPictureTaken(byte[] data, Camera camera) {
-                Log.v("CallCamera", "Take Picure!!!");
                 String sd = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SnowTest";
                 long now = System.currentTimeMillis();
                 Date date = new Date(now);
@@ -132,6 +130,8 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
                         Toast.LENGTH_SHORT).show();
 
                 mSurface.mCamera.startPreview();
+
+                Log.v(TAG, "Complete Take a Picture");
             }
         };
     }
@@ -144,11 +144,15 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
     public static class PictureList extends Fragment {
         public PictureList() {}
+        private final String TAG = "PICLIST";
 
+        // TODO: MediaStore.Images.Media.EXTERNAL_CONTENT_URI을 감시하다가 사진이 저장되면 2번의 onChange가 호출된다.
+        // TODO: 원인/해결방법 찾아야함.
         ContentObserver contentObserver = new ContentObserver( new Handler() ){
             @Override
-            public void onChange( boolean selfChange ){
-                super.onChange( selfChange );
+            public void onChange(boolean selfChange){
+                Log.v(TAG, "Call onChange");
+                super.onChange(selfChange);
                 mCursor.close();
                 mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null,
                         MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, MediaStore.Images.Media.DATE_ADDED + " desc");
@@ -166,8 +170,8 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
+            Log.v(TAG, "Call onCreateView");
             View rootView = inflater.inflate(R.layout.list_picture, container, false);
-            Log.d("CREATE", "PictureList is created");
             mGrid = (GridView) rootView.findViewById(R.id.picture);
             mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, MediaStore.Images.Media.DATE_ADDED + " desc");
@@ -177,19 +181,31 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
             mAdapter = new ImageAdapter(getActivity(), mCr, mCursor);
             mGrid.setAdapter(mAdapter);
             mGrid.setOnItemClickListener(mItemClickListener);
-            mCr.registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, contentObserver );
+            mCr.registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, contentObserver);
+
+            //getFragmentManager().beginTransaction();
 
             return rootView;
         }
 
+
         @Override
         public void onResume(){
+            Log.v(TAG, "Call onResume");
             super.onResume();
-            Log.i("LISTFRAG", "Here is List Fragment Resume");
+        }
+
+        // onDestroyView에서 contentObserver를 해제해주지 않으면 App을 껐다 킬때마다 contentObserver가 살아있어서 계속 Listening을 하게된다.
+        @Override
+        public void onDestroyView(){
+            Log.v(TAG, "Call onDestroyView");
+            super.onDestroyView();
+            mCr.unregisterContentObserver(contentObserver);
         }
 
         AdapterView.OnItemClickListener mItemClickListener =
                 new AdapterView.OnItemClickListener() {
+                    @Override
                     public void onItemClick(AdapterView<?> parent, View view,
                                             int position, long id) {
                         mCursor.moveToPosition(position);

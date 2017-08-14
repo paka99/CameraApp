@@ -192,7 +192,7 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
             mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     null, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, MediaStore.Images.Media.DATE_ADDED + " desc");
 //            mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//                    null, null, null, null);
+//                    null, null, null, MediaStore.Images.Media.DATE_ADDED + " desc");
 
             mAdapter = new ImageAdapter(getActivity(), mCr, mCursor);
             mGrid.setAdapter(mAdapter);

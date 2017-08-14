@@ -144,26 +144,42 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
     public static class PictureList extends Fragment {
         public PictureList() {}
+        private boolean firstChange;
+
         private final String TAG = "PICLIST";
 
         // TODO: MediaStore.Images.Media.EXTERNAL_CONTENT_URI을 감시하다가 사진이 저장되면 2번의 onChange가 호출된다.
         // TODO: 원인/해결방법 찾아야함.
+        // 2017.8.13
+        //  - 2번의 onChange가 호출되는 반면 첫번째 호출은 의미없는 호출? 이며
+        //  - 두번째 호출은 새로 추가된 사진으로 인한 호출이다.
+        //  - 찍은 뒤 바로 Picture List Page로의 Swipe가 느린이유는
+        //  - Thumbnail 갯수가 많아지면 로딩하는데까지 시간이 많이 걸리기 때문이다.
         ContentObserver contentObserver = new ContentObserver( new Handler() ){
             @Override
             public void onChange(boolean selfChange){
-                Log.v(TAG, "Call onChange");
+                Log.v(TAG, "Call onChange and first Change is " + firstChange );
                 super.onChange(selfChange);
-                mCursor.close();
-                mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null,
-                        MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[] {"SnowTest"}, MediaStore.Images.Media.DATE_ADDED + " desc");
 
-                mAdapter.updateCursor(mCursor);
-                mAdapter.notifyDataSetChanged();
+                if(firstChange) {
+                    mCursor.close();
+                    mCursor = mCr.query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null,
+                            MediaStore.Images.Media.BUCKET_DISPLAY_NAME + "=?", new String[]{"SnowTest"}, MediaStore.Images.Media.DATE_ADDED + " desc");
+
+                    mAdapter.updateCursor(mCursor);
+                    mAdapter.notifyDataSetChanged();
+                    firstChange = false;
+                }
+
+                else{
+                    firstChange = true;
+                }
             }
         };
 
         public static PictureList newInstance() {
             PictureList fragment = new PictureList();
+            fragment.firstChange = false;
             return fragment;
         }
 
@@ -182,7 +198,7 @@ public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
             mGrid.setAdapter(mAdapter);
             mGrid.setOnItemClickListener(mItemClickListener);
             mCr.registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, contentObserver);
-
+            //mCr.registerContentObserver(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI , false, contentObserver);
             //getFragmentManager().beginTransaction();
 
             return rootView;

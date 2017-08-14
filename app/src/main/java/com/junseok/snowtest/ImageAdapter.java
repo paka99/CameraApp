@@ -3,10 +3,9 @@ package com.junseok.snowtest;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.DataSetObservable;
-import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -18,9 +17,10 @@ import android.widget.ImageView;
 
 public class ImageAdapter extends BaseAdapter {
     private Context mContext;
-    DataSetObservable mDataSetObservable = new DataSetObservable();
     private ContentResolver mCr;
     private Cursor mCursor;
+
+    private final String TAG = "IMGADT";
 
     public ImageAdapter(Context c, ContentResolver mCr, Cursor mCursor) {
         mContext = c;
@@ -59,24 +59,12 @@ public class ImageAdapter extends BaseAdapter {
         imageView.setAdjustViewBounds(true);
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
+        int numPicture = mCursor.getCount();
+
+        if(position == numPicture - 1){
+            Log.v(TAG, "Call last getView: Num of Pictures is " + numPicture);
+        }
+
         return imageView;
-    }
-
-    @Override
-    public void registerDataSetObserver(DataSetObserver observer){
-        super.registerDataSetObserver(observer);
-        mDataSetObservable.registerObserver(observer);
-    }
-
-    @Override
-    public void unregisterDataSetObserver(DataSetObserver observer){
-        super.unregisterDataSetObserver(observer);
-        mDataSetObservable.unregisterObserver(observer);
-    }
-
-    @Override
-    public void notifyDataSetChanged(){
-        super.notifyDataSetChanged();
-        mDataSetObservable.notifyChanged();
     }
 }
